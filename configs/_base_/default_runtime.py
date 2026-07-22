@@ -1,3 +1,4 @@
+#TODO: Linkar al yaml que se genere
 weight = None  # path to model weight
 resume = False  # whether to resume training process
 evaluate = True  # evaluate after each epoch training process
@@ -5,8 +6,8 @@ test_only = False  # test process
 
 seed = None  # train process will init a random seed and record
 save_path = "exp/default"
-num_worker = 16  # total worker in all gpu
-batch_size = 16  # total batch size in all gpu
+num_worker = 4  # total worker in all gpu
+batch_size = 4  # total batch size in all gpu
 gradient_accumulation_steps = 1  # total steps to accumulate gradients for
 batch_size_val = None  # auto adapt to bs 1 for each gpu
 batch_size_test = None  # auto adapt to bs 1 for each gpu
@@ -21,7 +22,8 @@ empty_cache = False
 empty_cache_per_epoch = False
 find_unused_parameters = False
 
-enable_wandb = True
+#Herramienta de monitorización
+enable_wandb = False
 wandb_project = "pointcept"  # custom your project name e.g. Sonata, PTv3
 wandb_key = None  # wandb token, default is None. If None, login with `wandb login` in your terminal
 
