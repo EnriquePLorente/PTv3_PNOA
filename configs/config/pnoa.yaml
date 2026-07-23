@@ -1,0 +1,76 @@
+paths:
+  raw_dataset_dir: data\pnoa\raw
+  processed_dataset_dir: data\pnoa\processed
+
+
+dataset:
+  name: pnoa_lidar
+  tile_size: 120
+  overlap: 10
+
+path:
+  dataset_path: 'Aragon' 
+  exp_name: 'exp_pnoa_kpconv'
+
+preprocess:
+  channels:
+    - xyz
+    - rgb
+    - intensity
+    - return_num
+    - num_returns
+  remove_classes: [1, 7, 12]
+
+class_mapping:
+  Suelo:
+    original_ids: [2]
+    target_id: 1
+  Vegetacion_Baja:
+    original_ids: [3]
+    target_id: 2
+  Vegetacion_Med_Alta:
+    original_ids: [4, 5]
+    target_id: 3
+  Edificios:
+    original_ids: [6]
+    target_id: 4
+  Agua:
+    original_ids: [9] 
+    target_id: 5
+  Cables:
+    original_ids: [14]
+    target_id: 6
+  Torres:
+    original_ids: [15]
+    target_id: 7
+  Puentes:
+    original_ids: [16, 17]
+    target_id: 8
+  Vehiculos:
+    original_ids: [63, 64]
+    target_id: 9
+  Paneles:
+    original_ids: [67]
+    target_id: 10
+  Aerogeneradores:
+    original_ids: [68]
+    target_id: 11
+
+model:
+  num_classes: 12
+  input_features: 7
+  dropout: 0.5
+
+training:
+  batch_size: 16
+  epochs: 200
+  num_workers: 4
+  device: cuda
+  seed: 1
+
+validation:
+  batch_size: 16
+  metrics: [accuracy, mIoU, F1]
+
+inference:
+  batch_size: 16
