@@ -34,27 +34,7 @@ import yaml
 
 
 
-def parse_classes(yaml_path="configs\\pnoa.yaml"):
-    
 
-    TODO: Se deben mapear las clases desde 0 hasta n
-
-    classes = [
-        "Suelo",
-        "Vegetacion_Baja",
-        "Vegetacion_Med_Alta",
-        "Edificios",
-        "Agua",
-        "Cables",
-        "Torres",
-        "Puentes",
-        "Vehiculos",
-        "Paneles",
-        "Aerogeneradores",
-    ]
-    import pdb; pdb.set_trace()
-    class2label = {cls: i for i, cls in enumerate(classes)}
-    
 
 
 def main_process():
@@ -111,14 +91,14 @@ def main_process():
 
 
 if __name__ == "__main__":
+    dir_data_path = "data\\pnoa\\raw"
+    lista_ficheros = os.listdir(dir_data_path)
 
-    
-    PNOAPreprocess = preprocess_utils.PNOALazPreprocessing(laz_file_path="data\\pnoa\\raw\\muestra_1_677-4615_500x500_urban_train_v2.laz", 
-    output_dir="data\\pnoa\\processed", 
-    tile_size=120, 
-    overlap=10,
+    PNOAPreprocess = preprocess_utils.PNOALazPreprocessing(
     log_level=logging.DEBUG)
 
-    PNOAPreprocess.run()
-    sys.exit()
-    main_process()
+    PNOAPreprocess.load_config(r"configs\\config\\pnoa.yaml")
+
+    for fichero_laz in lista_ficheros:
+        PNOAPreprocess.run(fichero_laz)
+

@@ -2,16 +2,17 @@ import laspy
 import numpy as np
 from pathlib import Path
 import os
-import loggings
+import logging
+import yaml 
 
 class PNOALazPreprocessing():
-    def __init__(self, laz_file_path, output_dir, tile_size, overlap):
-        self.logging = 
+    def __init__(self, log_level):
+        logging.basicConfig(level=log_level, format='%(levelname)s: %(message)s')
 
-        self.laz_file_path = Path(laz_file_path)
-        self.output_dir = output_dir
-        self.tile_size = tile_size
-        self.overlap = overlap
+        self.laz_dir = None
+        self.output_dir = None
+        self.tile_size = None
+        self.overlap = None
         
 
         self.point_number = None
@@ -21,17 +22,51 @@ class PNOALazPreprocessing():
         self.strength = None
         self.segment = None
 
-        self.laz_name = self.laz_file_path.name[:-4] #Elimina la ruta y guarda el nombre sin el formato
         self.tile_name = None
    
         
-        # Crea directorio corresponiente al fichero laz
-        os.makedirs(self.output_dir, exist_ok=True)
 
-    def read_laz(self):
+    def load_config(self, config_path):
+
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+            model_config = config['model']
+            class_mapping_config = config['class_mapping']
+            dataset_config = config['dataset']
+            paths_config = config['paths']
+
+            list_values = [item['original_ids'] for item in class_mapping_config.values()]    #Guarda una lista con los valores de las clases
+
+            self.map_classes = {i:valores for i, valores in enumerate(list_values, start=1)}  #Mapea los valores en un enumerate
+            self.inverse_map_classes = {viejo_id: nueva_clase for nueva_clase, viejos_ids in self.map_classes.items() for viejo_id in viejos_ids}
+
+            self.output_dir = paths_config['processed_dataset_dir']
+            self.laz_dir = paths_config['raw_dataset_dir']
+
+            self.overlap = dataset_config['overlap']
+            self.tile_size = dataset_config['tile_size']
+
+            os.makedirs(self.output_dir, exist_ok=True)
+
+            
+
+    def _map_classes(self):
+        lookup_table = np.arange(256, dtype=self.segment.dtype)
+
+        for viejo, nuevo in self.inverse_map_classes.items():
+            lookup_table[viejo] = nuevo
+        
+        self.segment = lookup_table[self.segment]
+
+
+    def _read_laz(self, laz_file_name):
         """
         Lee el fichero PNOA y extrae la información
         """
+        self.laz_name = laz_file_name[:-4]
+        logging.info(f"Procesando: {self.laz_name}")
+        self.laz_file_path = os.path.join(self.laz_dir, laz_file_name)
+
         with laspy.open(self.laz_file_path) as f:
             
             self.point_number = f.header.point_count
@@ -39,11 +74,13 @@ class PNOALazPreprocessing():
             x_max, y_max, z_max = f.header.maxs
             self.laz_bbox = (x_min, x_max, y_min, y_max)
 
-            las = f.read()  TODO: ANALIZAR SI EN MINÚSCULAS DE VERDAD SON METROS REALES O NO
-            self.coord = np.vstack([las.X, las.Y, las.Z]).T
+            las = f.read()  
+            self.coord = np.vstack([las.x, las.y, las.z]).T
             self.color = np.vstack([las.red, las.green, las.blue]).T
             self.strength = np.vstack([las.intensity]).T
             self.segment = np.vstack([las.classification]).T
+            # Mapea la clasificación con el diccionario
+            self._map_classes()
 
 
     def _save_tile_to_npy(self, **features):
@@ -54,10 +91,8 @@ class PNOALazPreprocessing():
         # features es un diccionario. Ejemplo: {'coord': array, 'color': array}
         for feature_name, feature_data in features.items():
             
-            # Crea la ruta completa: ej. "ruta/al/tile/coord.npy"
             tile_file_path = os.path.join(self.tile_output_dir, f"{feature_name}.npy")
             
-            # Guarda el archivo numpy
             np.save(tile_file_path, feature_data)
 
 
@@ -118,7 +153,7 @@ class PNOALazPreprocessing():
                     tiles_validos.add(tile_coords)
 
                     self.tile_name = self.laz_name + f"_tile_{i}_{j}"
-                    self.tile_output_dir = os.path.join(self.output_dir,self.tile_name)
+                    self.tile_output_dir = os.path.join(self.output_dir,self.laz_name,self.tile_name)
 
                     os.makedirs(self.tile_output_dir, exist_ok=True)
 
@@ -133,8 +168,8 @@ class PNOALazPreprocessing():
 
         return tiles_validos
 
-    def run(self):
-        self.read_laz()
+    def run(self, laz_file_name):
+        self._read_laz(laz_file_name)
         self._generate_tiles_from_laz()
 
 
