@@ -555,7 +555,7 @@ class PointTransformerV3(PointModule):
         pdnorm_decouple=True,
         pdnorm_adaptive=False,
         pdnorm_affine=True,
-        pdnorm_conditions=("ScanNet", "S3DIS", "Structured3D"),
+        pdnorm_conditions=("ScanNet", "S3DIS", "Structured3D","PNOA"),
     ):
         super().__init__()
         self.num_stages = len(enc_depths)

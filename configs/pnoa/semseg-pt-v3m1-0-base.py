@@ -1,20 +1,48 @@
+
 _base_ = ["../_base_/default_runtime.py"]
 
+
+def _get_pnoa_splits():
+    txt_path = "pointcept/datasets/preprocessing/pnoa/distribucion_datos.txt"
+    dist_dict = {'train': [], 'val': [], 'test': []}
+    current_split = None
+    
+    try:
+        with open(txt_path, 'r') as f:
+            for line in f.read().splitlines():
+                line = line.strip(" ,\t\r\n") 
+                if not line:
+                    continue
+                if line in dist_dict:
+                    current_split = line
+                elif current_split is not None:
+                    dist_dict[current_split].append(line)
+
+    except FileNotFoundError:
+        print(f"ADVERTENCIA: No se encontró el archivo {txt_path}")
+        
+    return {k: tuple(v) for k, v in dist_dict.items()}
+
+splits = _get_pnoa_splits()
+
+del _get_pnoa_splits
+
+
 # misc custom setting
-batch_size = 12  # bs: total bs in all gpus
-num_worker = 24
+batch_size = 1  # bs: total bs in all gpus
+num_worker = 1
 mix_prob = 0.8
-empty_cache = False
+empty_cache = True
 enable_amp = True
 
 # model settings
 model = dict(
     type="DefaultSegmentorV2",
-    num_classes=13,
+    num_classes=11,
     backbone_out_channels=64,
     backbone=dict(
         type="PT-v3m1",
-        in_channels=6,
+        in_channels=4,
         order=("z", "z-trans", "hilbert", "hilbert-trans"),
         stride=(2, 2, 2, 2),
         enc_depths=(2, 2, 2, 6, 2),
@@ -34,7 +62,7 @@ model = dict(
         shuffle_orders=True,
         pre_norm=True,
         enable_rpe=False,
-        enable_flash=True,
+        enable_flash=False,
         upcast_attention=False,
         upcast_softmax=False,
         enc_mode=False,
@@ -66,7 +94,7 @@ param_dicts = [dict(keyword="block", lr=0.0006)]
 
 # dataset settings
 dataset_type = "S3DISDataset"
-data_root = "data/s3dis"
+data_root = "data/pnoa/processed"
 
 data = dict(
     num_classes=13,
@@ -88,7 +116,7 @@ data = dict(
     ],
     train=dict(
         type=dataset_type,
-        split=("Area_1", "Area_2", "Area_3", "Area_4", "Area_6"),
+        split=splits['train'],
         data_root=data_root,
         transform=[
             dict(type="CenterShift", apply_z=True),
@@ -111,7 +139,7 @@ data = dict(
             # dict(type="RandomColorDrop", p=0.2, color_augment=0.0),
             dict(
                 type="GridSample",
-                grid_size=0.02,
+                grid_size=0.05,
                 hash_type="fnv",
                 mode="train",
                 return_grid_coord=True,
@@ -125,21 +153,21 @@ data = dict(
             dict(
                 type="Collect",
                 keys=("coord", "grid_coord", "segment"),
-                feat_keys=("color", "normal"),
+                feat_keys=("color", "strength"),
             ),
         ],
         test_mode=False,
     ),
     val=dict(
         type=dataset_type,
-        split="Area_5",
+        split=splits['val'],
         data_root=data_root,
         transform=[
             dict(type="CenterShift", apply_z=True),
             dict(type="Copy", keys_dict={"segment": "origin_segment"}),
             dict(
                 type="GridSample",
-                grid_size=0.02,
+                grid_size=0.05,
                 hash_type="fnv",
                 mode="train",
                 return_grid_coord=True,
@@ -151,14 +179,14 @@ data = dict(
             dict(
                 type="Collect",
                 keys=("coord", "grid_coord", "segment", "origin_segment", "inverse"),
-                feat_keys=("color", "normal"),
+                feat_keys=("color", "strength"),
             ),
         ],
         test_mode=False,
     ),
     test=dict(
         type=dataset_type,
-        split="Area_5",
+        split=splits['test'],
         data_root=data_root,
         transform=[
             dict(type="CenterShift", apply_z=True),
@@ -168,7 +196,7 @@ data = dict(
         test_cfg=dict(
             voxelize=dict(
                 type="GridSample",
-                grid_size=0.02,
+                grid_size=0.05,
                 hash_type="fnv",
                 mode="test",
                 return_grid_coord=True,
@@ -180,7 +208,7 @@ data = dict(
                 dict(
                     type="Collect",
                     keys=("coord", "grid_coord", "index"),
-                    feat_keys=("color", "normal"),
+                    feat_keys=("color", "strength"),
                 ),
             ],
             aug_transform=[

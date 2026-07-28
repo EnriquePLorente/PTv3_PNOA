@@ -1,4 +1,4 @@
-#TODO: Linkar al yaml que se genere
+
 weight = None  # path to model weight
 resume = False  # whether to resume training process
 evaluate = True  # evaluate after each epoch training process

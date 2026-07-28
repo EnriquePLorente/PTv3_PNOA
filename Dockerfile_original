@@ -1,0 +1,52 @@
+#docker build -t pt_v3_5090 .
+# docker run --gpus all -it --rm --name pt_v3_env -v D:\eplorente\PTv3_PNOA:/workspace pt_v3_5090 bash
+# cd libs/pointops
+# python setup.py install
+# cd ../..
+
+# Usamos la imagen oficial de PyTorch 2.5.0 con CUDA 12.4 y herramientas de compilación (devel)
+FROM pytorch/pytorch:2.5.0-cuda12.4-cudnn9-devel
+
+# Evitamos que la instalación de paquetes nos haga preguntas interactivas
+ENV DEBIAN_FRONTEND=noninteractive
+
+
+# 8.9 es Ada Lovelace (RTX 4000), 9.0 es Hopper. 
+# El "+PTX" obliga a la RTX 5090 a entender el código de Hopper nativamente a máxima velocidad.
+ENV TORCH_CUDA_ARCH_LIST="8.9;9.0+PTX"
+ENV I_MPI_CXX=g++
+
+# Instalamos dependencias vitales de Ubuntu (Ninja es clave para compilar rapidísimo)
+RUN apt-get update && apt-get install -y \
+    git \
+    ninja-build \
+    build-essential \
+    wget \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Actualizamos pip
+RUN pip install --upgrade pip
+
+# 1. Instalamos librerías estándar de Pointcept
+RUN pip install h5py pyyaml sharedarray tensorboard tensorboardx wandb yapf addict einops scipy plyfile termcolor timm open3d ftfy regex tqdm
+
+# 2. Instalamos PyTorch Geometric y sus complementos (Scatter, Sparse)
+# Descargamos los binarios directos para PyTorch 2.5 + CUDA 12.4 para ahorrar horas de compilación
+RUN pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.5.0+cu124.html
+RUN pip install torch-geometric
+
+# 3. Instalamos Sparse Conv (Necesario para el framework general)
+RUN pip install spconv-cu124
+
+# 4. Instalamos librerías NLP adicionales que usa Pointcept
+RUN pip install transformers==4.50.3 peft
+RUN pip install git+https://github.com/openai/CLIP.git
+
+# 5. Instalamos Flash Attention (EL MOTOR DE PTv3)
+# Al tener instalado Ninja, esto tardará unos 5-10 minutos en compilar
+RUN pip install flash-attn --no-build-isolation
+
+# Configuramos el entorno de trabajo
+WORKDIR /workspace

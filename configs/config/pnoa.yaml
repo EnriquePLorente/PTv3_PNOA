@@ -19,7 +19,7 @@ preprocess:
     - intensity
     - return_num
     - num_returns
-  remove_classes: [1, 7, 12]
+
 
 class_mapping:
   Suelo:
@@ -58,7 +58,6 @@ class_mapping:
 
 model:
   num_classes: 11
-  input_features: 7
   dropout: 0.5
 
 training:

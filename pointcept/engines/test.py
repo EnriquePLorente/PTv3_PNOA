@@ -330,6 +330,12 @@ class SemSegTester(TesterBase):
                     os.path.join(save_path, f"{self.test_loader.dataset.split}.pth"),
                 )
 
+            if self.cfg.data.test.type == "PNOADataset":
+                torch.save(
+                    dict(intersection=intersection, union=union, target=target),
+                    os.path.join(save_path, f"{self.test_loader.dataset.split}.pth"),
+                )
+
             iou_class = intersection / (union + 1e-10)
             accuracy_class = intersection / (target + 1e-10)
             mIoU = np.mean(iou_class)
@@ -570,6 +576,11 @@ class DINOSemSegTester(TesterBase):
             target = np.sum([meters["target"] for _, meters in record.items()], axis=0)
 
             if self.cfg.data.test.type == "S3DISDataset":
+                torch.save(
+                    dict(intersection=intersection, union=union, target=target),
+                    os.path.join(save_path, f"{self.test_loader.dataset.split}.pth"),
+                )
+            if self.cfg.data.test.type == "PNOADataset":
                 torch.save(
                     dict(intersection=intersection, union=union, target=target),
                     os.path.join(save_path, f"{self.test_loader.dataset.split}.pth"),

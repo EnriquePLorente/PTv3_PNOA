@@ -1,5 +1,7 @@
 """Este archivo se lee a la hora de saber que archivos preprocesar y para distribuirlos"""
 
+
+
 pnoa_splits = {
     "muestra_1_677-4615_500x500_urban_train_v2": "train", 
     "muestra_2_678-4615_1000x500_urban_train_v2": "val",   

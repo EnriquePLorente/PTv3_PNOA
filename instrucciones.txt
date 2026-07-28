@@ -1,2 +1,8 @@
-#1. Ejecuta el preproceso
-C:\Users\eplorente\.conda\envs\3d_analysis\python.exe .\pointcept\datasets\preprocessing\pnoa\preprocess_pnoa.py --dataset_root "data/pnoa/raw" --output_root "data/pnoa/processed" --splits muestra_1_677-4615_500x500_urban_train_v2 muestra_2_678-4615_1000x500_urban_train_v2 --num_workers 4
+Para entrenamiento:
+
+1. Ejecuta el preproceso en Windows
+python pointcept\datasets\preprocessing\pnoa\preprocess_pnoa.py
+
+2. Ejecuta el entrenamiento en Docker
+#S3DIS sh scripts/train.sh -p python -g 1 -d s3dis -c semseg-pt-v3m1-0-base -n mi_primer_experimento
+#PNOA sh scripts/train.sh -p python -g 1 -d pnoa -c semseg-pt-v3m1-0-base -n mi_primer_experimento
