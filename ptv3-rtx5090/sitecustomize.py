@@ -1,0 +1,1 @@
+import torch_scatter  # noqa: F401

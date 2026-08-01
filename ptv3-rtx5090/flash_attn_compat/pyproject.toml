@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flash-attn-ptv3-blackwell"
+version = "1.0.0"
+description = "PTv3-compatible flash_attn API backed by fused PyTorch SDPA on Blackwell"
+requires-python = ">=3.10"
+dependencies = ["torch>=2.7"]
+
+[tool.setuptools]
+packages = ["flash_attn"]

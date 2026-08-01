@@ -11,51 +11,6 @@ from pointcept.models.utils import offset2batch
 from .builder import MODELS, build_model
 
 
-
-def _validate_pnoa_target(seg_logits, target, ignore_index=-1):
-    """Comprueba las etiquetas antes de ejecutar las pérdidas CUDA."""
-    target = target.long()
-
-    if seg_logits.ndim != 2:
-        raise RuntimeError(
-            f"Forma inesperada de seg_logits: {tuple(seg_logits.shape)}"
-        )
-
-    num_classes = seg_logits.shape[1]
-
-    invalid = (
-        (target != ignore_index)
-        & ((target < 0) | (target >= num_classes))
-    )
-
-    if invalid.any().item():
-        invalid_labels = (
-            torch.unique(target[invalid])
-            .detach()
-            .cpu()
-            .tolist()
-        )
-        all_labels = (
-            torch.unique(target)
-            .detach()
-            .cpu()
-            .tolist()
-        )
-
-        raise RuntimeError(
-            "\nETIQUETAS PNOA INVALIDAS\n"
-            f"seg_logits shape: {tuple(seg_logits.shape)}\n"
-            f"target shape: {tuple(target.shape)}\n"
-            f"target dtype: {target.dtype}\n"
-            f"num_classes: {num_classes}\n"
-            f"ignore_index: {ignore_index}\n"
-            f"etiquetas invalidas: {invalid_labels}\n"
-            f"etiquetas del lote: {all_labels}"
-        )
-
-    return target
-
-
 @MODELS.register_module()
 class DefaultSegmentor(nn.Module):
     def __init__(self, backbone=None, criteria=None):
@@ -71,50 +26,11 @@ class DefaultSegmentor(nn.Module):
         seg_logits = self.backbone(input_dict)
         # train
         if self.training:
-            target = input_dict["segment"].long()
-            num_classes = seg_logits.shape[1]
-            ignore_index = -1
-
-            invalid = (
-                (target != ignore_index)
-                & ((target < 0) | (target >= num_classes))
-            )
-
-            if invalid.any().item():
-                invalid_labels = (
-                    torch.unique(target[invalid])
-                    .detach()
-                    .cpu()
-                    .tolist()
-                )
-                all_labels = (
-                    torch.unique(target)
-                    .detach()
-                    .cpu()
-                    .tolist()
-                )
-                sample_names = input_dict.get(
-                    "name", "<nombre no disponible>"
-                )
-
-                raise RuntimeError(
-                    "\nETIQUETAS PNOA INVALIDAS\n"
-                    f"seg_logits shape: {tuple(seg_logits.shape)}\n"
-                    f"target shape: {tuple(target.shape)}\n"
-                    f"target dtype: {target.dtype}\n"
-                    f"num_classes: {num_classes}\n"
-                    f"ignore_index: {ignore_index}\n"
-                    f"etiquetas invalidas: {invalid_labels}\n"
-                    f"etiquetas del lote: {all_labels}\n"
-                    f"muestras: {sample_names}"
-                )
-
-            loss = self.criteria(seg_logits, target)
+            loss = self.criteria(seg_logits, input_dict["segment"])
             return dict(loss=loss)
         # eval
         elif "segment" in input_dict.keys():
-            target = _validate_pnoa_target(seg_logits, input_dict["segment"])
-            loss = self.criteria(seg_logits, target)
+            loss = self.criteria(seg_logits, input_dict["segment"])
             return dict(loss=loss, seg_logits=seg_logits)
         # test
         else:
@@ -166,13 +82,11 @@ class DefaultSegmentorV2(nn.Module):
             return_dict["point"] = point
         # train
         if self.training:
-            target = _validate_pnoa_target(seg_logits, input_dict["segment"])
-            loss = self.criteria(seg_logits, target)
+            loss = self.criteria(seg_logits, input_dict["segment"])
             return_dict["loss"] = loss
         # eval
         elif "segment" in input_dict.keys():
-            target = _validate_pnoa_target(seg_logits, input_dict["segment"])
-            loss = self.criteria(seg_logits, target)
+            loss = self.criteria(seg_logits, input_dict["segment"])
             return_dict["loss"] = loss
             return_dict["seg_logits"] = seg_logits
         # test
@@ -278,12 +192,10 @@ class DefaultLORASegmentorV2(nn.Module):
             return_dict["point"] = point
 
         if self.training:
-            target = _validate_pnoa_target(seg_logits, input_dict["segment"])
-            loss = self.criteria(seg_logits, target)
+            loss = self.criteria(seg_logits, input_dict["segment"])
             return_dict["loss"] = loss
         elif "segment" in input_dict.keys():
-            target = _validate_pnoa_target(seg_logits, input_dict["segment"])
-            loss = self.criteria(seg_logits, target)
+            loss = self.criteria(seg_logits, input_dict["segment"])
             return_dict["loss"] = loss
             return_dict["seg_logits"] = seg_logits
         else:

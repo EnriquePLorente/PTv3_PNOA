@@ -1,0 +1,39 @@
+services:
+  ptv3:
+    build:
+      context: .
+      args:
+        MAX_JOBS: 1
+
+    image: pointcept-ptv3-rtx5090:cu128
+    gpus: all
+    ipc: host
+    shm_size: "16gb"
+    working_dir: /workspace
+
+    volumes:
+      - ${POINTCEPT_WORKSPACE:-.}:/workspace
+      - ./verify_rtx5090.py:/opt/ptv3/verify_rtx5090.py:ro
+
+      # Persisten los módulos Python generados por cumm/spconv.
+      - cumm-source:/opt/src/cumm
+      - spconv-source:/opt/src/spconv
+
+      # Conservan las compilaciones CUDA terminadas.
+      - cumm-build:/opt/src/cumm/cumm/build
+      - spconv-build:/opt/src/spconv/spconv/build
+
+    environment:
+      PYTHONPATH: /workspace/ptv3-rtx5090:/workspace:/opt/pointcept
+      CUDA_MODULE_LOADING: LAZY
+      PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
+      MAX_JOBS: "1"
+
+    stdin_open: true
+    tty: true
+
+volumes:
+  cumm-source:
+  spconv-source:
+  cumm-build:
+  spconv-build:

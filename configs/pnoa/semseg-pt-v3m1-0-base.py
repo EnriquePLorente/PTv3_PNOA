@@ -62,7 +62,7 @@ model = dict(
         shuffle_orders=True,
         pre_norm=True,
         enable_rpe=False,
-        enable_flash=False,
+        enable_flash=True,
         upcast_attention=False,
         upcast_softmax=False,
         enc_mode=False,
@@ -97,22 +97,20 @@ dataset_type = "S3DISDataset"
 data_root = "data/pnoa/processed"
 
 data = dict(
-    num_classes=13,
+    num_classes=11,
     ignore_index=-1,
     names=[
-        "ceiling",
-        "floor",
-        "wall",
-        "beam",
-        "column",
-        "window",
-        "door",
-        "table",
-        "chair",
-        "sofa",
-        "bookcase",
-        "board",
-        "clutter",
+        "Suelo",
+        "Vegetación baja",
+        "Vegetación media alta",
+        "Edificios",
+        "Agua",
+        "Cables",
+        "Torres",
+        "Puentes",
+        "Vehículos",
+        "Paneles",
+        "Aerogeneradores"
     ],
     train=dict(
         type=dataset_type,

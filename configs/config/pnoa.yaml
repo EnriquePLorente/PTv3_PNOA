@@ -23,38 +23,48 @@ preprocess:
 
 class_mapping:
   Suelo:
+    train_id: 0
     original_ids: [2]
-    
+
   Vegetacion_Baja:
+    train_id: 1
     original_ids: [3]
-    
+
   Vegetacion_Med_Alta:
+    train_id: 2
     original_ids: [4, 5]
-    
+
   Edificios:
+    train_id: 3
     original_ids: [6]
-    
+
   Agua:
-    original_ids: [9] 
-    
+    train_id: 4
+    original_ids: [9]
+
   Cables:
+    train_id: 5
     original_ids: [14]
-    
+
   Torres:
+    train_id: 6
     original_ids: [15]
-    
+
   Puentes:
+    train_id: 7
     original_ids: [16, 17]
-    
+
   Vehiculos:
+    train_id: 8
     original_ids: [63, 64]
-    
+
   Paneles:
+    train_id: 9
     original_ids: [67]
-    
+
   Aerogeneradores:
+    train_id: 10
     original_ids: [68]
-    
 
 model:
   num_classes: 11

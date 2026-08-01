@@ -1,0 +1,10 @@
+.git
+__pycache__
+*.pyc
+data
+exp
+outputs
+weights
+*.pth
+*.pt
+*.ckpt
